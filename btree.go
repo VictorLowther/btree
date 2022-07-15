@@ -104,8 +104,7 @@ func (t *Tree[T]) Copy() *Tree[T] {
 // Clone makes a full copy of the Tree, including all data.
 func (t *Tree[T]) Clone() *Tree[T] {
 	res := t.Copy()
-	res.count = t.count
-	res.root = t.copyNodes(t.root)
+	res.root = t.copyNodes(t.root, res)
 	return res
 }
 

@@ -34,6 +34,8 @@ go get https://github.com/VictorLowther/btree
 
 ## Benchmarks:
 
+On a Macbook Pro M1 Max:
+
     % go test -v -bench .  |&tee test.log
     === RUN   TestRotate
     btree_test.go:130: Tree populated correctly

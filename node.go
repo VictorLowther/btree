@@ -22,7 +22,7 @@ func (n *node[T]) balance() (res int) {
 	return
 }
 
-// setHeight calculates the height and balance of this node.
+// setHeight calculates the height of this node.
 func (n *node[T]) setHeight() {
 	n.h = 0
 	if n.l != nil {
@@ -56,16 +56,16 @@ func (t *Tree[T]) putNode(n *node[T]) {
 	t.nodePool.Put(n)
 }
 
-func (t *Tree[T]) copyNodes(n *node[T]) *node[T] {
+func (t *Tree[T]) copyNodes(n *node[T], into *Tree[T]) *node[T] {
 	if n == nil {
 		return nil
 	}
-	res := t.newNode(n.i)
+	res := into.newNode(n.i)
 	res.h = n.h
-	if res.l = t.copyNodes(n.l); res.l != nil {
+	if res.l = t.copyNodes(n.l, into); res.l != nil {
 		res.l.p = res
 	}
-	if res.r = t.copyNodes(n.r); res.r != nil {
+	if res.r = t.copyNodes(n.r, into); res.r != nil {
 		res.r.p = res
 	}
 	return res
@@ -133,9 +133,6 @@ func (n *node[T]) swapChild(was, is *node[T]) {
 //   a   z
 //  / \
 // x   y
-//
-// rotateLeft calculates new node heights directly, since by itself it cannot break
-// the AVL properties
 func (a *node[T]) rotateLeft() (b *node[T]) {
 	b = a.r
 	if a.p != nil {
@@ -218,10 +215,10 @@ func max[T any](n *node[T]) *node[T] {
 	return n
 }
 
-// rebalance ensures that the tree at h is an AVL tree via judicious application
-// of rotateRight and rotateLeft.  If rebalancing results in the node having the
-// same height it started with, then we will not need to even check any parent
-// nodes to see if they need rebalancing .
+// rebalanceAt walks up the tree starting at node n, rebalancing nodes
+// that no longer meet the AVL balance criteria. rebalanceAt will continue until
+// it either walks all the way up the tree, or the node has the
+// same height it started with.
 func (t *Tree[T]) rebalanceAt(n *node[T], forInsert bool) {
 	for {
 		oh := n.h
