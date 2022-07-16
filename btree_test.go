@@ -399,12 +399,13 @@ func TestRandomInsertStats(t *testing.T) {
 	tree, _ := newIntTree()
 	defer tree.Release()
 	n := 100000
-	for _, i := range rand.Perm(n) {
+	r := rand.New(rand.NewSource(time.Now().Unix()))
+	for _, i := range r.Perm(n) {
 		tree.Insert(i)
 	}
 	avg, _ := tree.HeightStats()
 	expAvg := math.Log2(float64(n)) - 1.5
-	if math.Abs(avg-expAvg) >= 2.0 {
+	if math.Abs(avg-expAvg) >= 1.44 {
 		t.Errorf("too much deviation from expected average height")
 	}
 	ins, rms, rbi, rbr := tree.RebalanceStats()
@@ -420,7 +421,7 @@ func TestSeqInsertStats(t *testing.T) {
 	}
 	avg, _ := tree.HeightStats()
 	expAvg := math.Log2(float64(n)) - 1.5
-	if math.Abs(avg-expAvg) >= 2.0 {
+	if math.Abs(avg-expAvg) >= 1.44 {
 		t.Errorf("too much deviation from expected average height")
 	}
 	ins, rms, rbi, rbr := tree.RebalanceStats()
