@@ -292,6 +292,26 @@ func TestIterDirection(t *testing.T) {
 			i--
 		}
 	}
+	iter := tree.Iterator(nil, nil)
+	i := -1
+	for iter.Next() && i <= 90 {
+		i++
+		if iter.Item() != i {
+			t.Fatalf("%d != %d", iter.Item(), i)
+		}
+	}
+	for iter.Prev() && i >= 20 {
+		i--
+		if iter.Item() != i {
+			t.Fatalf("%d != %d", iter.Item(), i)
+		}
+	}
+	for iter.Next() {
+		i++
+		if iter.Item() != i {
+			t.Fatalf("%d != %d", iter.Item(), i)
+		}
+	}
 }
 
 func TestReverse(t *testing.T) {

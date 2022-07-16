@@ -48,23 +48,29 @@ func Ne[T any](c CompareAgainst[T]) Test[T] {
 // You must not modify the tree while iterating over it, lest you
 // get undefined results and/or panics.
 type Iterator[T any] struct {
+	t           *Tree[T]
 	stack       []*node[T]
 	workingNode *node[T]
 	start, stop Test[T]
 	ascending   bool
 }
 
-// Release releases the state the Iterator holds.
-// Subsequent calls to Next will return false, and subsequent
-// calls to Item will panic.
-func (i *Iterator[T]) Release() {
+func (i *Iterator[T]) clearStack() {
 	for k := range i.stack {
 		i.stack[k] = nil
 	}
 	i.stack = i.stack[:0]
+}
+
+// Release releases the state the Iterator holds.
+// Subsequent calls to Next will return false, and subsequent
+// calls to Item will panic.
+func (i *Iterator[T]) Release() {
+	i.clearStack()
 	i.workingNode = nil
 	i.start = nil
 	i.stop = nil
+	i.t = nil
 }
 
 func (i *Iterator[T]) stackHead() *node[T] {
@@ -151,21 +157,41 @@ func (i *Iterator[T]) init(ascending bool, orNot Test[T]) bool {
 	}
 }
 
-const cannotChangeDirection = "cannot change iteration direction"
+func (i *Iterator[T]) changeDirection() bool {
+	i.ascending = !i.ascending
+	i.clearStack()
+	v := i.workingNode.i
+	i.workingNode = i.t.root
+	var old Test[T]
+	if i.ascending {
+		old = i.start
+		i.start = Lte(i.t.Cmp(v))
+		if !i.Next() {
+			return false
+		}
+		i.start = old
+	} else {
+		old = i.stop
+		i.stop = Gte(i.t.Cmp(v))
+		if !i.Prev() {
+			return false
+		}
+		i.stop = old
+	}
+	return true
+}
 
 // Next walks to the next larger node in the tree and returns true,
 // or returns false if there is no next larger node to walk to.
 //
 // If Next returns true, Item will return the item that
-// the current node contains.  Once Next is called on an Iterator,
-// you cannot call Prev.  This restriction may be lifted in a future version
-// of this library.
+// the current node contains.
 func (i *Iterator[T]) Next() bool {
 	if len(i.stack) == 0 {
 		return i.init(true, i.stop)
 	}
-	if !i.ascending {
-		panic(cannotChangeDirection)
+	if !i.ascending && !i.changeDirection() {
+		return false
 	}
 	if i.workingNode.r == nil {
 		i.pop()
@@ -188,14 +214,13 @@ func (i *Iterator[T]) Next() bool {
 // or returns false if there is no next smaller node to walk to.
 //
 // If Prev returns true, Item will return the item that
-// the current node contains.  Once Prev is called on an Iterator, you cannot call
-// Next.  This restriction may be lifted in a future version of this library.
+// the current node contains.
 func (i *Iterator[T]) Prev() bool {
 	if len(i.stack) == 0 {
 		return i.init(false, i.stop)
 	}
-	if i.ascending {
-		panic(cannotChangeDirection)
+	if i.ascending && !i.changeDirection() {
+		return false
 	}
 	if i.workingNode.l == nil {
 		i.pop()
@@ -239,6 +264,7 @@ func (i *Iterator[T]) Prev() bool {
 // will print all the items in tree in order.
 func (t *Tree[T]) Iterator(start, stop Test[T]) *Iterator[T] {
 	return &Iterator[T]{
+		t:           t,
 		workingNode: t.root,
 		start:       start,
 		stop:        stop,
