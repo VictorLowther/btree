@@ -111,38 +111,24 @@ func (i *Iterator[T]) Item() T {
 	return i.workingNode.i
 }
 
-func (i *Iterator[T]) pickNextNode(current, next, bound *node[T], boundCheck Test[T]) (*node[T], bool) {
+func (i *Iterator[T]) pickNextNode(current, next, bound *node[T], boundCheck Test[T]) *node[T] {
 	if boundCheck != nil && boundCheck(current.i) {
-		if bound == nil {
-			return current, false
-		}
-		return bound, true
+		return bound
 	}
 	i.push(current)
-	if next == nil {
-		return current, false
-	}
-	return next, true
+	return next
 }
 
 func (i *Iterator[T]) min(n *node[T]) {
-	var keepLooking bool
-	for {
-		if n, keepLooking = i.pickNextNode(n, n.l, n.r, i.start); !keepLooking {
-			break
-		}
+	for n != nil {
+		n = i.pickNextNode(n, n.l, n.r, i.start)
 	}
-	i.workingNode = i.stackHead()
 }
 
 func (i *Iterator[T]) max(n *node[T]) {
-	var keepLooking bool
-	for {
-		if n, keepLooking = i.pickNextNode(n, n.r, n.l, i.stop); !keepLooking {
-			break
-		}
+	for n != nil {
+		n = i.pickNextNode(n, n.r, n.l, i.stop)
 	}
-	i.workingNode = i.stackHead()
 }
 
 func (i *Iterator[T]) init(ascending bool, orNot Test[T]) bool {
@@ -153,6 +139,7 @@ func (i *Iterator[T]) init(ascending bool, orNot Test[T]) bool {
 			i.max(i.workingNode)
 		}
 		i.ascending = ascending
+		i.workingNode = i.stackHead()
 		if i.workingNode == nil || (orNot != nil && orNot(i.workingNode.i)) {
 			i.Release()
 			return false
@@ -187,6 +174,7 @@ func (i *Iterator[T]) Next() bool {
 		i.swapHead()
 		if i.workingNode.l != nil {
 			i.min(i.workingNode.l)
+			i.workingNode = i.stackHead()
 		}
 	}
 	if i.workingNode == nil || (i.stop != nil && i.stop(i.workingNode.i)) {
@@ -216,6 +204,7 @@ func (i *Iterator[T]) Prev() bool {
 		i.swapHead()
 		if i.workingNode.r != nil {
 			i.max(i.workingNode.r)
+			i.workingNode = i.stackHead()
 		}
 	}
 	if i.workingNode == nil || (i.start != nil && i.start(i.workingNode.i)) {
