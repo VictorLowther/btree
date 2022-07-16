@@ -629,66 +629,23 @@ func BenchmarkDeleteStringRand(b *testing.B) {
 }
 
 func BenchmarkIntIterAll(b *testing.B) {
-	b.Skipf("Long running and memory heavy")
 	b.StopTimer()
+	b.ReportAllocs()
 	tree, _ := newIntTree()
 	defer tree.Release()
-	for i := 0; i < b.N; i++ {
+	for i := 0; i < 1<<16; i++ {
 		tree.Insert(i)
 	}
 	b.StartTimer()
-	all := tree.Iterator(nil, nil)
 	i := 0
-	for all.Next() {
-		if i != all.Item() {
-			b.Fatal(i, " != ", all.Item())
+	for i < b.N {
+		all := tree.Iterator(nil, nil)
+		for all.Next() && i < b.N {
+			if i%(1<<16) != all.Item() {
+				b.Fatal(i, " != ", all.Item())
+			}
+			i++
 		}
-		i++
-	}
-	b.StopTimer()
-}
-
-func BenchmarkIntIterAfter(b *testing.B) {
-	b.Skipf("Long running and memory heavy")
-	b.StopTimer()
-	tree, cmp := newIntTree()
-	defer tree.Release()
-	for i := 0; i < b.N; i++ {
-		tree.Insert(i)
-	}
-	b.StartTimer()
-	i := b.N >> 1
-	all := tree.Iterator(Lte(cmp(i)), nil)
-	i++
-	for all.Next() {
-		if i != all.Item() {
-			b.Fatal(i, " != ", all.Item())
-		}
-		i++
-	}
-	b.StopTimer()
-}
-
-func BenchmarkIntIterBefore(b *testing.B) {
-	b.Skipf("Long running and memory heavy")
-	b.StopTimer()
-	tree, cmp := newIntTree()
-	defer tree.Release()
-	for i := 0; i < b.N; i++ {
-		tree.Insert(i)
-	}
-	b.StartTimer()
-	i := b.N >> 1
-	all := tree.Iterator(nil, Gte(cmp(i)))
-	i = 0
-	for all.Next() {
-		if i != all.Item() {
-			b.Fatal(i, " != ", all.Item())
-		}
-		i++
-	}
-	if i != b.N>>1 {
-		b.Fatalf("Expected %d as the largest node, not %d", b.N>>1, i)
 	}
 	b.StopTimer()
 }
@@ -697,6 +654,7 @@ func BenchmarkFetch(b *testing.B) {
 	for _, sz := range []int{1 << 4, 1 << 8, 1 << 16, 1 << 24} {
 		b.Run(fmt.Sprintf("btree size %d", sz), func(b *testing.B) {
 			b.StopTimer()
+			b.ReportAllocs()
 			tree, _ := newIntTree()
 			defer tree.Release()
 			for i := 0; i < sz; i++ {
@@ -729,31 +687,6 @@ func BenchmarkFetch(b *testing.B) {
 
 		})
 	}
-}
-
-func BenchmarkIntIterRange(b *testing.B) {
-	b.Skipf("Long running and memory heavy")
-	b.StopTimer()
-	tree, cmp := newIntTree()
-	defer tree.Release()
-	for i := 0; i < b.N; i++ {
-		tree.Insert(i)
-	}
-	b.StartTimer()
-	start := b.N >> 2
-	end := (b.N >> 1) + start
-	all := tree.Iterator(Lt(cmp(start)), Gte(cmp(end)))
-	i := start
-	for all.Next() {
-		if i != all.Item() {
-			b.Fatal(i, " != ", all.Item())
-		}
-		i++
-	}
-	if i != end {
-		b.Fatalf("Expected %d as the largest node, not %d", end, i)
-	}
-	b.StopTimer()
 }
 
 func TestAscendAfter(t *testing.T) {
