@@ -429,6 +429,7 @@ func TestSeqInsertStats(t *testing.T) {
 
 func BenchmarkInsertIntSeq(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	tree, _ := newIntTree()
 	defer tree.Release()
 	b.StartTimer()
@@ -442,6 +443,7 @@ func BenchmarkInsertIntSeq(b *testing.B) {
 
 func BenchmarkInsertIntSeqReverse(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	tree, _ := newIntTree()
 	defer tree.Release()
 	b.StartTimer()
@@ -455,6 +457,7 @@ func BenchmarkInsertIntSeqReverse(b *testing.B) {
 
 func BenchmarkInsertIntRand(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	seed := time.Now().Unix()
 	tree, _ := newIntTree()
 	defer tree.Release()
@@ -471,6 +474,7 @@ func BenchmarkInsertIntRand(b *testing.B) {
 
 func BenchmarkDeleteIntSeq(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	tree, _ := newIntTree()
 	defer tree.Release()
 	for i := 0; i < b.N; i++ {
@@ -487,6 +491,7 @@ func BenchmarkDeleteIntSeq(b *testing.B) {
 
 func BenchmarkDeleteIntRand(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	seed := time.Now().Unix()
 	tree, _ := newIntTree()
 	defer tree.Release()
@@ -506,6 +511,7 @@ func BenchmarkDeleteIntRand(b *testing.B) {
 
 func BenchmarkInsertStringSeq(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	seed := time.Now().Unix()
 	tree, _ := newStringTree()
 	defer tree.Release()
@@ -526,6 +532,7 @@ func BenchmarkInsertStringSeq(b *testing.B) {
 
 func BenchmarkInsertStringRand(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	seed := time.Now().Unix()
 	tree, _ := newStringTree()
 	defer tree.Release()
@@ -545,6 +552,7 @@ func BenchmarkInsertStringRand(b *testing.B) {
 
 func BenchmarkDeleteStringSeq(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	seed := time.Now().Unix()
 	tree, _ := newStringTree()
 	defer tree.Release()
@@ -570,6 +578,7 @@ func BenchmarkDeleteStringSeq(b *testing.B) {
 
 func BenchmarkDeleteStringRand(b *testing.B) {
 	b.StopTimer()
+	b.ReportAllocs()
 	seed := time.Now().Unix()
 	tree, _ := newStringTree()
 	defer tree.Release()
