@@ -1,6 +1,7 @@
 package btree
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 	"reflect"
@@ -690,6 +691,44 @@ func BenchmarkIntIterBefore(b *testing.B) {
 		b.Fatalf("Expected %d as the largest node, not %d", b.N>>1, i)
 	}
 	b.StopTimer()
+}
+
+func BenchmarkFetch(b *testing.B) {
+	for _, sz := range []int{1 << 4, 1 << 8, 1 << 16, 1 << 24} {
+		b.Run(fmt.Sprintf("btree size %d", sz), func(b *testing.B) {
+			b.StopTimer()
+			tree, _ := newIntTree()
+			defer tree.Release()
+			for i := 0; i < sz; i++ {
+				tree.Insert(i)
+			}
+			fetched := 0
+			items := rand.Perm(sz)
+			b.StartTimer()
+			for i := 0; i < b.N; i++ {
+				if _, ok := tree.Fetch(items[i%sz] << 1); ok {
+					fetched++
+				}
+			}
+			b.StopTimer()
+		})
+		b.Run(fmt.Sprintf("map size %d", sz), func(b *testing.B) {
+			b.StopTimer()
+			m := map[int]struct{}{}
+			for i := 0; i < sz; i++ {
+				m[i] = struct{}{}
+			}
+			items := rand.Perm(sz)
+			fetched := 0
+			b.StartTimer()
+			for i := 0; i < b.N; i++ {
+				if _, ok := m[items[i%sz]<<1]; ok {
+					fetched++
+				}
+			}
+
+		})
+	}
 }
 
 func BenchmarkIntIterRange(b *testing.B) {

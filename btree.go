@@ -181,6 +181,15 @@ func (t *Tree[T]) Has(cmp CompareAgainst[T]) bool {
 	return found
 }
 
+// Fetch returns the exact match for item, true if it is in the tree,
+// or the zero value for T, false if it is not.
+func (t *Tree[T]) Fetch(item T) (v T, found bool) {
+	if n, dir := t.getExact(t.root, item); dir == Equal {
+		v, found = n.i, true
+	}
+	return
+}
+
 // Min returns the smallest item in the Tree and true, or a zero T and false if the tree is empty.
 func (t *Tree[T]) Min() (item T, found bool) {
 	if t.root != nil {

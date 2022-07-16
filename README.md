@@ -36,62 +36,29 @@ go get https://github.com/VictorLowther/btree
 
 On a Macbook Pro M1 Max:
 
-    % go test -v -bench .  |&tee test.log
-    === RUN   TestRotate
-    btree_test.go:130: Tree populated correctly
-    btree_test.go:150: Tree rotated left correctly
-    btree_test.go:171: Tree rotated right correctly
-    --- PASS: TestRotate (0.00s)
-    === RUN   TestCases
-    --- PASS: TestCases (0.00s)
-    === RUN   TestRange
-    --- PASS: TestRange (0.00s)
-    === RUN   TestIter
-    --- PASS: TestIter (0.00s)
-    === RUN   TestRandomInsertOrder
-    --- PASS: TestRandomInsertOrder (0.36s)
-    === RUN   TestRandomInsertDelete
-    btree_test.go:311: ins: 10000, rebalances/ins: 0.472000, rms: 10000, rebalances/rm: 0.277800
-    --- PASS: TestRandomInsertDelete (0.66s)
-    === RUN   TestRandomInsertDeleteNonExistent
-    btree_test.go:345: ins: 100, rebalances/ins: 0.470000, rms: 100, rebalances/rm: 0.520000
-    --- PASS: TestRandomInsertDeleteNonExistent (0.00s)
-    === RUN   TestRandomInsertPartialDeleteOrder
-    btree_test.go:367: ins: 1000, rebalances/ins: 0.454000, rms: 1000, rebalances/rm: 0.562000
-    --- PASS: TestRandomInsertPartialDeleteOrder (0.01s)
-    === RUN   TestRandomInsertStats
-    btree_test.go:383: ins: 100000, rebalances/ins: 0.465250, rms: 0, rebalances/rm: NaN
-    --- PASS: TestRandomInsertStats (0.03s)
-    === RUN   TestSeqInsertStats
-    btree_test.go:399: ins: 100000, rebalances/ins: 0.999830, rms: 0, rebalances/rm: NaN
-    --- PASS: TestSeqInsertStats (0.01s)
-    === RUN   TestAscendAfter
-    --- PASS: TestAscendAfter (0.00s)
-    === RUN   TestAscendBefore
-    --- PASS: TestAscendBefore (0.00s)
+    % go test -bench .
     goos: darwin
     goarch: arm64
     pkg: github.com/VictorLowther/btree
-    BenchmarkInsertIntSeq
-    BenchmarkInsertIntSeq-10           	 8760205	       140.7 ns/op
-    BenchmarkInsertIntSeqReverse
-    BenchmarkInsertIntSeqReverse-10    	11518032	       113.0 ns/op
-    BenchmarkInsertIntRand
-    BenchmarkInsertIntRand-10          	 2582887	       782.8 ns/op
-    BenchmarkDeleteIntSeq
-    BenchmarkDeleteIntSeq-10           	18287211	        73.69 ns/op
-    BenchmarkDeleteIntRand
-    BenchmarkDeleteIntRand-10          	 2558193	       901.9 ns/op
-    BenchmarkInsertStringSeq
-    BenchmarkInsertStringSeq-10        	 6735705	       194.2 ns/op
-    BenchmarkInsertStringRand
-    BenchmarkInsertStringRand-10       	 1000000	      1187 ns/op
-    BenchmarkDeleteStringSeq
-    BenchmarkDeleteStringSeq-10        	12886626	        90.69 ns/op
-    BenchmarkDeleteStringRand
-    BenchmarkDeleteStringRand-10       	 1434376	       933.4 ns/op
+    BenchmarkInsertIntSeq-10           	 8666037	       138.4 ns/op	      42 B/op	       0 allocs/op
+    BenchmarkInsertIntSeqReverse-10    	11037992	       114.4 ns/op	      43 B/op	       0 allocs/op
+    BenchmarkInsertIntRand-10          	 2686587	       756.9 ns/op	      30 B/op	       0 allocs/op
+    BenchmarkDeleteIntSeq-10           	18283369	        74.21 ns/op	      29 B/op	       0 allocs/op
+    BenchmarkDeleteIntRand-10          	 2703058	       796.6 ns/op	      24 B/op	       0 allocs/op
+    BenchmarkInsertStringSeq-10        	 6777834	       182.9 ns/op	      48 B/op	       1 allocs/op
+    BenchmarkInsertStringRand-10       	 1634024	       909.2 ns/op	      48 B/op	       1 allocs/op
+    BenchmarkDeleteStringSeq-10        	13391804	        91.18 ns/op	      20 B/op	       0 allocs/op
+    BenchmarkDeleteStringRand-10       	 1757889	       881.9 ns/op	      19 B/op	       0 allocs/op
+    BenchmarkFetch/btree_size_16-10    	94638462	        12.93 ns/op
+    BenchmarkFetch/map_size_16-10      	198753306	         6.014 ns/op
+    BenchmarkFetch/btree_size_256-10   	46076608	        23.35 ns/op
+    BenchmarkFetch/map_size_256-10     	152236431	         8.373 ns/op
+    BenchmarkFetch/btree_size_65536-10 	13597803	        87.44 ns/op
+    BenchmarkFetch/map_size_65536-10   	61784941	        19.08 ns/op
+    BenchmarkFetch/btree_size_16777216-10         	 2100366	       582.8 ns/op
+    BenchmarkFetch/map_size_16777216-10           	20900006	        57.07 ns/op
     PASS
-    ok  	github.com/VictorLowther/btree	37.723s
+    ok  	github.com/VictorLowther/btree	77.503s
 
 Interestingly enough, the slowdown on the random benchmarks appears to be due to
 branch misprediction rather than tree rebalancing performing more work -- dealing
