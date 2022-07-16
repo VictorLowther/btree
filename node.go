@@ -166,23 +166,23 @@ func (a *node[T]) rotateRight() (b *node[T]) {
 	return
 }
 
-func (t *Tree[T]) getExact(n *node[T], v T) (res *node[T], found, onRight bool) {
+func (t *Tree[T]) getExact(n *node[T], v T) (res *node[T], dir int) {
 	for n != nil {
 		if t.less(v, n.i) {
 			if n.l == nil {
-				return n, false, false
+				return n, Less
 			}
 			n = n.l
 		} else if t.less(n.i, v) {
 			if n.r == nil {
-				return n, false, true
+				return n, Greater
 			}
 			n = n.r
 		} else {
 			break
 		}
 	}
-	return n, true, false
+	return n, Equal
 }
 
 // min finds the minimal child of h
@@ -258,22 +258,22 @@ func (t *Tree[T]) rebalanceAt(n *node[T], forInsert bool) {
 // insert or replace a new value. If a new value is inserted, any needed rebalancing
 // is performed.
 func (t *Tree[T]) insert(v T) {
-	n, found, onRight := t.getExact(t.root, v)
-	if found {
+	n, direction := t.getExact(t.root, v)
+	var needRebalance bool
+	switch direction {
+	case Equal:
 		n.i = v
 		return
+	case Less:
+		n.l = t.newNode(v)
+		n.l.p = n
+		needRebalance = n.r == nil
+	case Greater:
+		n.r = t.newNode(v)
+		n.r.p = n
+		needRebalance = n.l == nil
 	}
-	nn := t.newNode(v)
-	nn.p = n
-	if onRight {
-		n.r = nn
-		onRight = n.l == nil
-	} else {
-		n.l = nn
-		onRight = n.r == nil
-	}
-
-	if onRight {
+	if needRebalance {
 		n.h++
 		if n.p != nil {
 			t.rebalanceAt(n.p, true)
@@ -283,14 +283,12 @@ func (t *Tree[T]) insert(v T) {
 
 // remove the passed-in value from the tree, if it exists. The tree will be rebalanced if needed.
 func (t *Tree[T]) remove(v T) (deleted T, found bool) {
-	var (
-		at, alt *node[T]
-	)
-	at, found, _ = t.getExact(t.root, v)
-	if !found {
+	at, direction := t.getExact(t.root, v)
+	if found = direction == Equal; !found {
 		return
 	}
 	deleted = at.i
+	var alt *node[T]
 	for {
 		if at.h == 1 {
 			if alt = at.p; alt != nil {
