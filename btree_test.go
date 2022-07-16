@@ -268,6 +268,34 @@ func TestIter(t *testing.T) {
 	}
 }
 
+func TestReverse(t *testing.T) {
+	tree, _ := newIntTree()
+	defer tree.Release()
+	src := rand.New(rand.NewSource(55))
+	n := 1000
+	for _, v := range src.Perm(n) {
+		tree.Insert(v)
+		tree.root.balanced(t)
+	}
+	j := 0
+	iter := tree.Iterator(nil, nil)
+	for iter.Next() {
+		if iter.Item() != j {
+			t.Fatalf("bad order")
+		}
+		j++
+	}
+	tree.Reverse()
+	j = n
+	iter = tree.Iterator(nil, nil)
+	for iter.Next() {
+		j--
+		if iter.Item() != j {
+			t.Fatalf("bad order")
+		}
+	}
+}
+
 func TestRandomInsertOrder(t *testing.T) {
 	tree, _ := newIntTree()
 	defer tree.Release()

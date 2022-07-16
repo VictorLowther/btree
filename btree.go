@@ -87,9 +87,18 @@ func (t *Tree[T]) Release() {
 func (t *Tree[T]) Reverse() {
 	ll := t.less
 	t.less = func(a, b T) bool { return ll(b, a) }
-	if t.root != nil {
-		reverse(t.root)
+	if t.root == nil {
+		return
 	}
+	var n *node[T]
+	i := t.Iterator(nil, nil)
+	for i.Next() {
+		if n != nil {
+			n.r, n.l = n.l, n.r
+		}
+		n = i.workingNode
+	}
+	n.r, n.l = n.l, n.r
 }
 
 // Copy makes a new copy of the Tree that has the same ordering function

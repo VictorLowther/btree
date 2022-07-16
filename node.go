@@ -92,20 +92,6 @@ func (t *Tree[T]) releaseNodes(n *node[T]) {
 	}
 }
 
-// reverse reverses a tree by recursively swapping
-// left and right pointers for all nodes.  This
-// cannot break the AVL properties, so no other fields
-// need to be adjusted.
-func reverse[T any](n *node[T]) {
-	if n.l != nil {
-		reverse(n.l)
-	}
-	if n.r != nil {
-		reverse(n.r)
-	}
-	n.l, n.r = n.r, n.l
-}
-
 func (n *node[T]) swapChild(was, is *node[T]) {
 	if n.r == was {
 		n.r = is
