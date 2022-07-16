@@ -268,6 +268,31 @@ func TestIter(t *testing.T) {
 	}
 }
 
+func TestIterDirection(t *testing.T) {
+	tree, cmp := newIntTree()
+	for i := 0; i < 100; i++ {
+		tree.Insert(i)
+	}
+	for _, idx := range []int{0, 10, 90} {
+		iter := tree.Iterator(Lt(cmp(idx)), nil)
+		i := idx
+		for iter.Next() {
+			if iter.Item() != i {
+				t.Fatalf("%d != %d", iter.Item(), i)
+			}
+			i++
+		}
+		iter = tree.Iterator(nil, Gt(cmp(idx)))
+		i = idx
+		for iter.Prev() {
+			if iter.Item() != i {
+				t.Fatalf("%d != %d", iter.Item(), i)
+			}
+			i--
+		}
+	}
+}
+
 func TestReverse(t *testing.T) {
 	tree, _ := newIntTree()
 	defer tree.Release()

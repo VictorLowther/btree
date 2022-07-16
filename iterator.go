@@ -51,6 +51,7 @@ type Iterator[T any] struct {
 	stack       []*node[T]
 	workingNode *node[T]
 	start, stop Test[T]
+	ascending   bool
 }
 
 // Release releases the state the Iterator holds.
@@ -110,35 +111,76 @@ func (i *Iterator[T]) Item() T {
 	return i.workingNode.i
 }
 
-func (i *Iterator[T]) min(n *node[T]) {
-	for {
-		if i.start != nil && i.start(n.i) {
-			if n.r == nil {
-				break
-			}
-			n = n.r
-			continue
+func (i *Iterator[T]) pickNextNode(current, next, bound *node[T], boundCheck Test[T]) (*node[T], bool) {
+	if boundCheck != nil && boundCheck(current.i) {
+		if bound == nil {
+			return current, false
 		}
-		i.push(n)
-		if n.l == nil {
+		return bound, true
+	}
+	i.push(current)
+	if next == nil {
+		return current, false
+	}
+	return next, true
+}
+
+func (i *Iterator[T]) min(n *node[T]) {
+	var keepLooking bool
+	for {
+		if n, keepLooking = i.pickNextNode(n, n.l, n.r, i.start); !keepLooking {
 			break
 		}
-		n = n.l
 	}
 	i.workingNode = i.stackHead()
 }
 
-// Next walks to the next node in the tree and returns true,
-// or returns false if there is no next node to walk to.
+func (i *Iterator[T]) max(n *node[T]) {
+	var keepLooking bool
+	for {
+		if n, keepLooking = i.pickNextNode(n, n.r, n.l, i.stop); !keepLooking {
+			break
+		}
+	}
+	i.workingNode = i.stackHead()
+}
+
+func (i *Iterator[T]) init(ascending bool, orNot Test[T]) bool {
+	if i.workingNode != nil {
+		if ascending {
+			i.min(i.workingNode)
+		} else {
+			i.max(i.workingNode)
+		}
+		i.ascending = ascending
+		if i.workingNode == nil || (orNot != nil && orNot(i.workingNode.i)) {
+			i.Release()
+			return false
+		}
+		return true
+	} else {
+		i.Release()
+		return false
+	}
+}
+
+const cannotChangeDirection = "cannot change iteration direction"
+
+// Next walks to the next larger node in the tree and returns true,
+// or returns false if there is no next larger node to walk to.
 //
 // If Next returns true, Item will return the item that
-// the current node contains.
+// the current node contains.  Once Next is called on an Iterator,
+// you cannot call Prev.  This restriction may be lifted in a future version
+// of this library.
 func (i *Iterator[T]) Next() bool {
 	if len(i.stack) == 0 {
-		if i.workingNode != nil {
-			i.min(i.workingNode)
-		}
-	} else if i.workingNode.r == nil {
+		return i.init(true, i.stop)
+	}
+	if !i.ascending {
+		panic(cannotChangeDirection)
+	}
+	if i.workingNode.r == nil {
 		i.pop()
 	} else {
 		i.workingNode = i.workingNode.r
@@ -154,6 +196,35 @@ func (i *Iterator[T]) Next() bool {
 	return true
 }
 
+// Prev walks to the next smaller node in the tree and returns true,
+// or returns false if there is no next smaller node to walk to.
+//
+// If Prev returns true, Item will return the item that
+// the current node contains.  Once Prev is called on an Iterator, you cannot call
+// Next.  This restriction may be lifted in a future version of this library.
+func (i *Iterator[T]) Prev() bool {
+	if len(i.stack) == 0 {
+		return i.init(false, i.stop)
+	}
+	if i.ascending {
+		panic(cannotChangeDirection)
+	}
+	if i.workingNode.l == nil {
+		i.pop()
+	} else {
+		i.workingNode = i.workingNode.l
+		i.swapHead()
+		if i.workingNode.r != nil {
+			i.max(i.workingNode.r)
+		}
+	}
+	if i.workingNode == nil || (i.start != nil && i.start(i.workingNode.i)) {
+		i.Release()
+		return false
+	}
+	return true
+}
+
 // Iterator creates a new Iterator that will ignore all items on the left for which start returns true and
 // all items on the right for which stop returns true.
 //
@@ -162,6 +233,12 @@ func (i *Iterator[T]) Next() bool {
 // stop should be one of Gt (inclusive), Gte (exclusive)
 //
 // If either start or stop is nil, then that condition will not apply.
+//
+// After the Iterator is created, you must call Next or Prev to
+// fetch the initial item.  Calling Next will start iteration with the
+// smallest item in the tree that start returns false for, and calling Prev
+// will start iteration with the largest item in the tree that stop returns
+// false for.
 //
 // Example:
 //
