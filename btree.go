@@ -184,8 +184,10 @@ func (t *Tree[T]) Has(cmp CompareAgainst[T]) bool {
 // Fetch returns the exact match for item, true if it is in the tree,
 // or the zero value for T, false if it is not.
 func (t *Tree[T]) Fetch(item T) (v T, found bool) {
-	if n, dir := t.getExact(t.root, item); dir == Equal {
-		v, found = n.i, true
+	if t.root != nil {
+		if n, dir := t.getExact(t.root, item); dir == Equal {
+			v, found = n.i, true
+		}
 	}
 	return
 }
